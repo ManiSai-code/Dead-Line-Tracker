@@ -137,3 +137,19 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+# --- Java / Spring Boot Specific ---
+server/target/
+server/.mvn/
+server/*.jar
+server/*.war
+server/*.log
+server/.factorypath
+server/.project
+server/.settings/
+server/.classpath
+
+# --- Database & IDE ---
+.idea/
+.vscode/
+*.sql
+*.db

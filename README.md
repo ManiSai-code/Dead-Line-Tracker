@@ -1,6 +1,6 @@
 # Dead-Line-Tracker
 
-git clone 
+git clone https://github.com/ManiSai-code/Dead-Line-Tracker.git
 
 
 cd Dead-Line-Tracker

@@ -1,18 +1,13 @@
 package com.example.server;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*; // This covers DeleteMapping and PathVariable
 import java.util.List;
-
+import java.time.LocalDate;
 @RestController
 @CrossOrigin(origins = "*") 
 public class ApiController {
 
-    // This connects the Repository to the Controller
     @Autowired
     private DeadlineRepository deadlineRepository;
 
@@ -21,15 +16,23 @@ public class ApiController {
         return "Backend is running!";
     }
 
-    // New: Get all deadlines from the database
     @GetMapping("/api/deadlines")
     public List<Deadline> getAllDeadlines() {
         return deadlineRepository.findAll();
     }
 
-    // New: Save a new deadline coming from React
     @PostMapping("/api/deadlines")
-    public Deadline addDeadline(@RequestBody Deadline deadline) {
-        return deadlineRepository.save(deadline);
+public Deadline addDeadline(@RequestBody Deadline deadline) {
+    LocalDate taskDate = LocalDate.parse(deadline.getDueDate());
+    if (taskDate.isBefore(LocalDate.now())) {
+        throw new RuntimeException("Cannot set deadlines in the past!");
+    }
+    return deadlineRepository.save(deadline);
+}
+
+    // This is now correctly inside the class and uses deadlineRepository
+    @DeleteMapping("/api/deadlines/{id}")
+    public void deleteDeadline(@PathVariable Long id) {
+        deadlineRepository.deleteById(id);
     }
 }

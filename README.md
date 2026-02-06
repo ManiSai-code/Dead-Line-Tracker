@@ -2,7 +2,8 @@
 
 git clone https://github.com/ManiSai-code/Dead-Line-Tracker.git
 
-
+## install postgresql and create a database named deadline_tracker
+## in server>src>main>resources>application.properties cahneg database password to your databases password 
 cd Dead-Line-Tracker
 
 cd frontend

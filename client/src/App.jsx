@@ -19,7 +19,7 @@ function App() {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
 
-    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`) // Added userId parameter
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`)
       .then(res => res.json())
       .then(data => {
         setDeadlines(data);
@@ -55,7 +55,7 @@ function App() {
     const userId = localStorage.getItem("userId");
     const updatedItem = { ...item, completed: !item.completed };
     
-    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, { // Added userId parameter
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedItem)
@@ -72,7 +72,7 @@ function App() {
       completed: false 
     }; 
 
-    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, { // Added userId parameter
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newDeadline)
@@ -83,6 +83,12 @@ function App() {
       setPriority("Medium"); 
       fetchDeadlines(); 
     });
+  };
+
+  const logout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userId");
+    setIsLoggedIn(false);
   };
 
   // 4. FILTER & SORT LOGIC
@@ -100,226 +106,151 @@ function App() {
     if (!aOverdue && bOverdue) return 1;
 
     const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
-    const aPrio = a.priority || "Medium";
-    const bPrio = b.priority || "Medium";
-    return priorityOrder[aPrio] - priorityOrder[bPrio];
+    return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
   });
-
-  const logout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userId");
-    setIsLoggedIn(false);
-  };
 
   // 5. USER INTERFACE (JSX)
   return (
     <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh', 
-      width: '100vw', 
-      backgroundColor: '#f0f2f5',
-      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+      minHeight: '100vh', width: '100vw', backgroundColor: '#F8FAFC', 
+      fontFamily: '"Inter", "Segoe UI", sans-serif', color: '#1E293B'
     }}>
       
       <div style={{ 
-        width: '100%', 
-        maxWidth: '450px', 
-        padding: '20px', 
-        paddingTop: '60px', 
-        backgroundColor: 'white', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        width: '90%', maxWidth: '480px', padding: '30px', paddingTop: '80px', 
+        backgroundColor: '#FFFFFF', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
         position: 'relative' 
       }}>
+        
+        {/* Search Bar */}
+        <input 
+          type="text" placeholder="🔍 Search..." value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ 
+            position: 'absolute', top: '25px', left: '25px', width: '130px',
+            padding: '10px 15px', borderRadius: '15px', border: '1px solid #E2E8F0', 
+            fontSize: '13px', outline: 'none', backgroundColor: '#F1F5F9'
+          }}
+        />
+
+        {/* Logout Button */}
         <button 
           onClick={logout}
           style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            padding: '6px 14px',
-            backgroundColor: '#fff',
-            border: '1px solid #ff4d4d',
-            borderRadius: '20px',
-            fontSize: '12px',
-            cursor: 'pointer',
-            color: '#ff4d4d',
-            fontWeight: '600',
-            transition: '0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#ff4d4d';
-            e.target.style.color = '#fff';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#fff';
-            e.target.style.color = '#ff4d4d';
+            position: 'absolute', top: '25px', right: '25px', padding: '8px 16px',
+            backgroundColor: 'transparent', border: '1px solid #FDA4AF',
+            borderRadius: '15px', fontSize: '12px', cursor: 'pointer',
+            color: '#E11D48', fontWeight: '600'
           }}
         >
           Logout
         </button>
 
-        <input 
-          type="text" 
-          placeholder="🔍 Search..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ 
-            position: 'absolute',
-            top: '20px',
-            left: '20px',
-            width: '110px',
-            padding: '8px', 
-            borderRadius: '20px', 
-            border: '1px solid #ddd', 
-            fontSize: '13px',
-            outline: 'none',
-            backgroundColor: '#fff'
-          }}
-        />
-
-        <h1 style={{ color: '#1a1a1b', marginBottom: '10px', marginTop: '0px' }}>
+        <h1 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '8px', color: '#0F172A', textAlign: 'center' }}>
           Deadline Tracker
         </h1>
-
-        <p style={{ fontSize: '14px', marginBottom: '20px' }}>
-          Status: <span style={{ fontWeight: 'bold', color: status === "Backend Connected" ? "#28a745" : "#dc3545" }}>{status}</span>
+        
+        <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '30px', textAlign: 'center' }}>
+          Status: <span style={{ fontWeight: '700', color: status === "Backend Connected" ? "#10B981" : "#F43F5E" }}>
+            ● {status}
+          </span>
         </p>
 
+        {/* Stats Dashboard */}
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-around', 
-          backgroundColor: '#f8f9fa', 
-          padding: '15px', 
-          borderRadius: '8px', 
-          marginBottom: '20px', 
-          border: '1px solid #e9ecef'
+          display: 'flex', justifyContent: 'space-around', backgroundColor: '#F8FAFC', 
+          padding: '20px', borderRadius: '20px', marginBottom: '30px', border: '1px solid #F1F5F9'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>{deadlines.length}</div>
-            <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#6366F1' }}>{deadlines.length}</div>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase' }}>Total</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#dc3545' }}>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#F43F5E' }}>
               {deadlines.filter(d => d.dueDate < today && !d.completed).length}
             </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>Late</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffc107' }}>
-              {deadlines.filter(d => d.priority === 'High' && !d.completed).length}
-            </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>Urgent</div>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase' }}>Overdue</div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Add Task Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <input 
-            type="text" 
-            placeholder="Task description..." 
-            value={task}
-            onChange={(e) => setTask(e.target.value)} 
-            required 
-            style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' }}
+            type="text" placeholder="What is the task?" value={task}
+            onChange={(e) => setTask(e.target.value)} required 
+            style={{ padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', fontSize: '15px', outline: 'none' }}
           />
-          <input 
-            type="date" 
-            value={dueDate} 
-            min={today}
-            onChange={(e) => setDueDate(e.target.value)} 
-            required
-            style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' }}
-          />
-          <select 
-            value={priority} 
-            onChange={(e) => setPriority(e.target.value)}
-            style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px', backgroundColor: 'white' }}
-          >
-            <option value="High">🔴 High Priority</option>
-            <option value="Medium">🟡 Medium Priority</option>
-            <option value="Low">🟢 Low Priority</option>
-          </select>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input 
+              type="date" value={dueDate} min={today} onChange={(e) => setDueDate(e.target.value)} required
+              style={{ flex: 2, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', outline: 'none' }}
+            />
+            <select 
+              value={priority} onChange={(e) => setPriority(e.target.value)}
+              style={{ flex: 1, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', backgroundColor: 'white' }}
+            >
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
           <button type="submit" style={{ 
-            padding: '12px', 
-            borderRadius: '6px', 
-            border: 'none', 
-            backgroundColor: '#007bff', 
-            color: 'white', 
-            fontSize: '16px', 
-            fontWeight: 'bold', 
-            cursor: 'pointer' 
+            padding: '16px', borderRadius: '15px', border: 'none', backgroundColor: '#6366F1', 
+            color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', marginTop: '10px'
           }}>
             Add Deadline
           </button>
         </form>
 
-        <div style={{ marginTop: '30px', textAlign: 'left' }}>
-          <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '5px' }}>Upcoming Tasks</h3>
-          <ul style={{ listStyle: 'none', padding: 0, maxHeight: '300px', overflowY: 'auto' }}>
+        {/* Task List */}
+        <div style={{ marginTop: '35px' }}>
+          <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '1px' }}>
+            Upcoming Tasks
+          </h3>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
             {sortedDeadlines.map((d) => {
               const isOverdue = d.dueDate < today && !d.completed;
               return (
-                <li key={d.id} style={{ 
-                  padding: '12px 0', 
-                  borderBottom: '1px solid #f0f0f0', 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center'
+                <div key={d.id} style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                  padding: '16px', marginBottom: '12px', backgroundColor: '#F8FAFC', 
+                  borderRadius: '18px', border: '1px solid #F1F5F9'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <input 
-                      type="checkbox" 
-                      checked={d.completed || false} 
-                      onChange={() => toggleComplete(d)} 
+                      type="checkbox" checked={d.completed || false} onChange={() => toggleComplete(d)}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6366F1' }}
                     />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ 
-                          fontSize: '16px', 
-                          color: d.completed ? '#aaa' : (isOverdue ? '#dc3545' : '#333'),
-                          textDecoration: d.completed ? 'line-through' : 'none',
-                          fontWeight: isOverdue ? 'bold' : 'normal'
+                          fontSize: '15px', fontWeight: '600', color: d.completed ? '#94A3B8' : (isOverdue ? '#F43F5E' : '#1E293B'),
+                          textDecoration: d.completed ? 'line-through' : 'none'
                         }}>
                           {d.task} {isOverdue && "⚠️"}
                         </span>
                         {!d.completed && (
-                          <span style={{ 
-                            fontSize: '10px', 
-                            fontWeight: 'bold', 
-                            padding: '2px 6px', 
-                            borderRadius: '4px', 
-                            color: 'white',
-                            backgroundColor: d.priority === 'High' ? '#dc3545' : d.priority === 'Medium' ? '#ffc107' : '#28a745'
+                           <span style={{ 
+                            fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', color: 'white',
+                            backgroundColor: d.priority === 'High' ? '#F43F5E' : d.priority === 'Medium' ? '#F59E0B' : '#10B981'
                           }}>
                             {d.priority}
                           </span>
                         )}
                       </div>
-                      <span style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                        Due: {d.dueDate} {isOverdue && "(OVERDUE)"}
-                      </span>
+                      <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                        Due: {d.dueDate} {isOverdue && "(LATE)"}
+                      </div>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleDelete(d.id)}
-                    style={{
-                      padding: '6px 10px', 
-                      backgroundColor: 'transparent', 
-                      border: 'none',
-                      color: '#ff4d4d', 
-                      cursor: 'pointer', 
-                      fontSize: '12px'
-                    }}
-                  >
-                    Delete
+                  <button onClick={() => handleDelete(d.id)} style={{ color: '#FDA4AF', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px' }}>
+                    ✕
                   </button>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         </div>
       </div>
     </div>

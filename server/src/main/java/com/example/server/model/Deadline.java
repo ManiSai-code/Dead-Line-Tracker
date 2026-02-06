@@ -1,9 +1,11 @@
-package com.example.server;
+package com.example.server.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Deadline {
@@ -14,8 +16,23 @@ public class Deadline {
     private String dueDate;
     private String priority; // 1. Added the new field
     private boolean completed;
+    @ManyToOne
+@JoinColumn(name = "user_id")
+private User user;
     public Deadline() {}
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    
 
+    // 2. The MISSING SETTER (Add this exactly as shown)
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    // 3. The GETTER (Add this too)
+    public User getUser() {
+        return user;
+    }
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

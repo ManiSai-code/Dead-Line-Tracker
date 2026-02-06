@@ -40,3 +40,64 @@
 .read-the-docs {
   color: #888;
 }
+/* Center the entire page */
+.auth-container {
+  background-color: #ffffff; /* Or whatever color your dashboard uses */
+}
+
+/* The white box */
+.auth-card {
+  background: white;
+  padding: 60px; /* More space inside */
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  
+  /* Make this match your dashboard width */
+  width: 90%; 
+  max-width: 800px; /* Adjust this to match your dashboard's max-width */
+  
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Force inputs and buttons to be on new lines */
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Adds space between username, password, and button */
+  margin-top: 20px;
+}
+
+.auth-card input {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 18px;
+  width: 100%;
+  box-sizing: border-box; /* Prevents input from leaking out of the box */
+}
+
+.auth-card button {
+  padding: 15px;
+  font-size: 18px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.auth-card button:hover {
+  background-color: #0056b3;
+}
+
+/* The "Create Account" link */
+.auth-card p {
+  margin-top: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.auth-toggle-link {
+  color: #007bff;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+}

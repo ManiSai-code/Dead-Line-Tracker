@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Auth from './Auth';
 
 function App() {
   // 1. STATE VARIABLES
@@ -8,13 +9,17 @@ function App() {
   const [priority, setPriority] = useState("Medium");
   const [searchTerm, setSearchTerm] = useState(""); 
   const [status, setStatus] = useState("Connecting...");
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") === "true");
 
   // 2. DATE HELPER
   const today = new Date().toISOString().split('T')[0];
 
   // 3. BACKEND ACTIONS
   const fetchDeadlines = () => {
-    fetch("http://localhost:8080/api/deadlines")
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`) // Added userId parameter
       .then(res => res.json())
       .then(data => {
         setDeadlines(data);
@@ -22,10 +27,19 @@ function App() {
       })
       .catch(() => setStatus("Backend Not Running"));
   };
-
+  
   useEffect(() => {
-    fetchDeadlines();
-  }, []);
+    if (isLoggedIn) {
+      fetchDeadlines();
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn) {
+    return <Auth onLoginSuccess={() => {
+        localStorage.setItem("isLoggedIn", "true");
+        setIsLoggedIn(true);
+    }} />;
+  }
 
   const handleDelete = (id) => {
     fetch(`http://localhost:8080/api/deadlines/${id}`, {
@@ -38,8 +52,10 @@ function App() {
   };
 
   const toggleComplete = (item) => {
+    const userId = localStorage.getItem("userId");
     const updatedItem = { ...item, completed: !item.completed };
-    fetch(`http://localhost:8080/api/deadlines`, {
+    
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, { // Added userId parameter
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedItem)
@@ -48,6 +64,7 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const userId = localStorage.getItem("userId");
     const newDeadline = { 
       task, 
       dueDate, 
@@ -55,7 +72,7 @@ function App() {
       completed: false 
     }; 
 
-    fetch("http://localhost:8080/api/deadlines", {
+    fetch(`http://localhost:8080/api/deadlines?userId=${userId}`, { // Added userId parameter
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newDeadline)
@@ -88,6 +105,12 @@ function App() {
     return priorityOrder[aPrio] - priorityOrder[bPrio];
   });
 
+  const logout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userId");
+    setIsLoggedIn(false);
+  };
+
   // 5. USER INTERFACE (JSX)
   return (
     <div style={{ 
@@ -101,7 +124,6 @@ function App() {
       fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
     }}>
       
-      {/* THE WHITE CARD BOX */}
       <div style={{ 
         width: '100%', 
         maxWidth: '450px', 
@@ -110,10 +132,36 @@ function App() {
         backgroundColor: 'white', 
         borderRadius: '12px', 
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        position: 'relative' // This keeps the search bar inside the box
+        position: 'relative' 
       }}>
+        <button 
+          onClick={logout}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            padding: '6px 14px',
+            backgroundColor: '#fff',
+            border: '1px solid #ff4d4d',
+            borderRadius: '20px',
+            fontSize: '12px',
+            cursor: 'pointer',
+            color: '#ff4d4d',
+            fontWeight: '600',
+            transition: '0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#ff4d4d';
+            e.target.style.color = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#fff';
+            e.target.style.color = '#ff4d4d';
+          }}
+        >
+          Logout
+        </button>
 
-        {/* SEARCH INPUT - Positioned in the Dashboard Corner */}
         <input 
           type="text" 
           placeholder="🔍 Search..." 
@@ -122,7 +170,7 @@ function App() {
           style={{ 
             position: 'absolute',
             top: '20px',
-            right: '20px',
+            left: '20px',
             width: '110px',
             padding: '8px', 
             borderRadius: '20px', 
@@ -141,7 +189,6 @@ function App() {
           Status: <span style={{ fontWeight: 'bold', color: status === "Backend Connected" ? "#28a745" : "#dc3545" }}>{status}</span>
         </p>
 
-        {/* DASHBOARD STATS SECTION */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-around', 
@@ -152,9 +199,7 @@ function App() {
           border: '1px solid #e9ecef'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>
-              {deadlines.length}
-            </div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>{deadlines.length}</div>
             <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -171,7 +216,6 @@ function App() {
           </div>
         </div>
 
-        {/* TASK INPUT FORM */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input 
             type="text" 
@@ -212,7 +256,6 @@ function App() {
           </button>
         </form>
 
-        {/* TASK LIST SECTION */}
         <div style={{ marginTop: '30px', textAlign: 'left' }}>
           <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '5px' }}>Upcoming Tasks</h3>
           <ul style={{ listStyle: 'none', padding: 0, maxHeight: '300px', overflowY: 'auto' }}>

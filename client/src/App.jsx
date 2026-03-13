@@ -110,6 +110,7 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
     const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
     return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
   });
+  
 
   // 5. USER INTERFACE (JSX)
   return (
@@ -272,9 +273,14 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
-                        Due: {d.dueDate} {isOverdue && "(LATE)"}
-                      </div>
+                      <div style={{ 
+  fontSize: '12px', 
+  color: isOverdue ? '#F43F5E' : '#94A3B8', // Turn date red if overdue
+  fontWeight: isOverdue ? '700' : '400',
+  marginTop: '2px' 
+}}>
+  Due: {d.dueDate} {isOverdue && "(LATE)"}
+</div>
                     </div>
                   </div>
                   <button onClick={() => handleDelete(d.id)} style={{ color: '#FDA4AF', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px' }}>

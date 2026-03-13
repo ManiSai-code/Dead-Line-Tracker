@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import Auth from './Auth';
+import LiveTimer from './DeadlineCard';
 import { Routes, Route, Link ,useNavigate} from "react-router-dom";
 //import './index.css'; 
 //import './App.css'; // If you have specific styles here too
+import DeadlineCard from './DeadlineCard';
 function App() {
   // 1. STATE VARIABLES
   const navigate = useNavigate();
@@ -557,7 +559,24 @@ const inputStyle = {
   fontWeight: isOverdue ? '700' : '400',
   marginTop: '2px' 
 }}>
-  Due: {d.dueDate} {isOverdue && "(LATE)"}
+  <div style={{ 
+  fontSize: '12px', 
+  color: isOverdue ? '#F43F5E' : '#94A3B8', 
+  fontWeight: isOverdue ? '700' : '400',
+  marginTop: '2px',
+  display: 'flex',       // Align date and timer side-by-side
+  gap: '8px' 
+}}>
+  <span>Due: {d.dueDate}</span> 
+  
+  {!d.completed && (
+    <span style={{ fontStyle: 'italic', opacity: 0.8 }}>
+      (<LiveTimer dueDate={d.dueDate} completed={d.completed} />)
+    </span>
+  )}
+  
+  {isOverdue && !d.completed && <span>(LATE)</span>}
+</div>
 </div>
                     </div>
                   </div>

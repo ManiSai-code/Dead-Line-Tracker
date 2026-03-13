@@ -10,7 +10,9 @@ function App() {
   const [searchTerm, setSearchTerm] = useState(""); 
   const [status, setStatus] = useState("Connecting...");
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") === "true");
-
+  const totalTasks = deadlines.length;
+const completedCount = deadlines.filter(task => task.completed).length;
+const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
   // 2. DATE HELPER
   const today = new Date().toISOString().split('T')[0];
 
@@ -156,7 +158,38 @@ function App() {
             ● {status}
           </span>
         </p>
+<div style={{ margin: '20px 0', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '12px' }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+    <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+      Overall Progress
+    </span>
+    <span style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5' }}>
+      {progressPercentage}%
+    </span>
+  </div>
 
+  {/* Progress Bar Container */}
+  <div style={{ 
+    width: '100%', 
+    height: '12px', 
+    backgroundColor: '#e2e8f0', 
+    borderRadius: '10px', 
+    overflow: 'hidden' 
+  }}>
+    {/* Animated Fill */}
+    <div style={{ 
+      width: `${progressPercentage}%`, 
+      height: '100%', 
+      backgroundColor: '#4f46e5', 
+      transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth "sliding" effect
+      boxShadow: '0 0 8px rgba(79, 70, 229, 0.4)' 
+    }} />
+  </div>
+  
+  <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px', textAlign: 'center' }}>
+    {completedCount} of {totalTasks} tasks completed
+  </p>
+</div>
         {/* Stats Dashboard */}
         <div style={{ 
           display: 'flex', justifyContent: 'space-around', backgroundColor: '#F8FAFC', 
@@ -173,7 +206,7 @@ function App() {
             <div style={{ fontSize: '11px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase' }}>Overdue</div>
           </div>
         </div>
-
+        
         {/* Add Task Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <input 

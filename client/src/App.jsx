@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Settings from './Settings';
 import Auth from './Auth';
 import LiveTimer from './DeadlineCard';
 import { Routes, Route, Link ,useNavigate} from "react-router-dom";
@@ -14,10 +15,14 @@ function App() {
 });
   const [deadlines, setDeadlines] = useState([]);
   const [task, setTask] = useState("");
+  
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [searchTerm, setSearchTerm] = useState(""); 
   const [status, setStatus] = useState("Connecting...");
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+  return localStorage.getItem('app-theme') === 'dark';
+});
   // App.jsx or EditProfile.js
 const [editName, setEditName] = useState(user?.username || "");
 const [editEmail, setEditEmail] = useState(user?.email || "");
@@ -34,6 +39,13 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
   //const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   // 3. BACKEND ACTIONS
+  const themeStyles = {
+    backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC',
+    color: isDarkMode ? '#F8FAFC' : '#1E293B',
+    minHeight: '100vh', // Ensure it covers the whole screen
+    width: '100vw',
+    transition: 'background-color 0.3s ease'
+  };
   const fetchDeadlines = () => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
@@ -46,7 +58,19 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
       })
       .catch(() => setStatus("Backend Not Running"));
   };
-  
+  useEffect(() => {
+  // This targets the literal <body> tag of your HTML
+  if (isDarkMode) {
+    document.body.style.backgroundColor = '#0F172A';
+    document.body.style.color = '#F8FAFC';
+  } else {
+    document.body.style.backgroundColor = '#F8FAFC';
+    document.body.style.color = '#1E293B';
+  }
+}, [isDarkMode]);
+  useEffect(() => {
+  localStorage.setItem('app-theme', isDarkMode ? 'dark' : 'light');
+}, [isDarkMode]);
   useEffect(() => {
     if (isLoggedIn) {
       fetchDeadlines();
@@ -63,17 +87,15 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
 }, [user?.id]);
 // In App.jsx
 if (!isLoggedIn) {
-  return <Auth onLoginSuccess={(userData) => {
-      // 1. Save to Storage (The "Memory")
+  return <Auth isDarkMode={isDarkMode} onLoginSuccess={(userData) => { // 2. Pass isDarkMode here
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userId", userData.id);
-      localStorage.setItem("userData", JSON.stringify(userData)); // Stringify the whole object
-
-      // 2. Save to State (The "UI")
+      localStorage.setItem("userData", JSON.stringify(userData));
       setUser(userData);
       setIsLoggedIn(true);
+      setIsDarkMode(userData.darkMode);
+      localStorage.setItem("app-theme", userData.darkMode ? 'dark' : 'light');
   }} />;
-
 }
 // This runs as soon as the component opens
 // ✅ CORRECT
@@ -125,6 +147,7 @@ const handleUpdateProfile = () => {
     alert("Update failed: " + err.message);
   });
 };
+
 
   const handleDelete = (id) => {
     fetch(`http://localhost:8080/api/deadlines/${id}`, {
@@ -178,6 +201,9 @@ const handleUpdateProfile = () => {
     setIsLoggedIn(false);
     localStorage.clear();
     navigate("/");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("app-theme");
+    localStorage.clear();
   };
 
   // 4. FILTER & SORT LOGIC
@@ -220,15 +246,14 @@ const inputStyle = {
 
   // 5. USER INTERFACE (JSX)
   return (
-    <div style={{ 
-    fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', 
-    color: '#334155' 
-  }}>
+    <div style={themeStyles}>
+    
     <Routes>
+      
       <Route path="/profile" element={
       <div style={{ 
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-        minHeight: '100vh', width: '100vw', backgroundColor: '#F8FAFC' 
+        minHeight: '100vh', width: '100vw', backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',color: isDarkMode ? '#F8FAFC' : '#1E293B' 
       }}>
         <div style={{ 
   padding: '40px', 
@@ -282,20 +307,24 @@ const inputStyle = {
         </div>
       </div>
     } />
+    <Route 
+            path="/settings" 
+            element={<Settings isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />} 
+          />
     <Route path="/edit-profile" element={
   <div style={{ 
     minHeight: '100vh', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    backgroundColor: '#F4F7FE',
+    backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC',
     position: 'relative' 
   }}>
     
     {/* 1. Back Button in the top left */}
     <button 
       onClick={() => navigate("/profile")}
-      style={{ position: 'absolute', top: '20px', left: '20px', border: 'none', background: 'none', cursor: 'pointer', color: '#6366F1', fontWeight: 'bold' }}
+      style={{ position: 'absolute', top: '20px', left: '20px', border: 'none', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', cursor: 'pointer', color: isDarkMode ? '#F8FAFC' : '#1E293B', fontWeight: 'bold' }}
     >
       ← Back to Hub
     </button>
@@ -303,7 +332,7 @@ const inputStyle = {
     {/* 2. The Main Form Card */}
     <div style={{ 
       padding: '30px', 
-      backgroundColor: 'white', 
+      backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', 
       borderRadius: '20px', 
       maxWidth: '400px', 
       width: '90%', 
@@ -389,14 +418,15 @@ const inputStyle = {
       <Route path="/" element={
     <div style={{ 
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      minHeight: '100vh', width: '100vw', backgroundColor: '#F8FAFC', 
-      fontFamily: '"Inter", "Segoe UI", sans-serif', color: '#1E293B'
+      minHeight: '100vh', width: '100vw', backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC', 
+      fontFamily: '"Inter", "Segoe UI", sans-serif', color: isDarkMode ? '#F8FAFC' : '#1E293B'
     }}>
       
       <div style={{ 
         width: '90%', maxWidth: '480px', padding: '30px', paddingTop: '80px', 
-        backgroundColor: '#FFFFFF', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
-        position: 'relative' 
+        backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
+        position: 'relative' ,
+        color: isDarkMode ? '#F8FAFC' : '#1E293B'
       }}>
         
         {/* Search Bar */}
@@ -406,7 +436,7 @@ const inputStyle = {
           style={{ 
             position: 'absolute', top: '25px', left: '25px', width: '130px',
             padding: '10px 15px', borderRadius: '15px', border: '1px solid #E2E8F0', 
-            fontSize: '13px', outline: 'none', backgroundColor: '#F1F5F9'
+            fontSize: '13px', outline: 'none', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC'
           }}
         />
 
@@ -430,16 +460,22 @@ const inputStyle = {
   
 </div>
 
-        <h1 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '8px', color: '#0F172A', textAlign: 'center' }}>
-          Deadline Tracker
-        </h1>
+        <h1 style={{ 
+  fontSize: '26px', 
+  fontWeight: '800', 
+  marginBottom: '8px', 
+  textAlign: 'center', 
+  color: isDarkMode ? '#F8FAFC' : '#1E293B' // Only one color key allowed!
+}}>
+  Deadline Tracker
+</h1>
         
         <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '30px', textAlign: 'center' }}>
           Status: <span style={{ fontWeight: '700', color: status === "Backend Connected" ? "#10B981" : "#F43F5E" }}>
             ● {status}
           </span>
         </p>
-<div style={{ margin: '20px 0', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '12px' }}>
+<div style={{ margin: '20px 0', padding: '15px', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', borderRadius: '12px' }}>
   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
     <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
       Overall Progress
@@ -473,7 +509,7 @@ const inputStyle = {
 </div>
         {/* Stats Dashboard */}
         <div style={{ 
-          display: 'flex', justifyContent: 'space-around', backgroundColor: '#F8FAFC', 
+          display: 'flex', justifyContent: 'space-around', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', 
           padding: '20px', borderRadius: '20px', marginBottom: '30px', border: '1px solid #F1F5F9'
         }}>
           <div style={{ textAlign: 'center' }}>
@@ -493,16 +529,16 @@ const inputStyle = {
           <input 
             type="text" placeholder="What is the task?" value={task}
             onChange={(e) => setTask(e.target.value)} required 
-            style={{ padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', fontSize: '15px', outline: 'none' }}
+            style={{ backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC',padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', fontSize: '15px', outline: 'none' }}
           />
           <div style={{ display: 'flex', gap: '10px' }}>
             <input 
               type="date" value={dueDate} min={today} onChange={(e) => setDueDate(e.target.value)} required
-              style={{ flex: 2, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', outline: 'none' }}
+              style={{ backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC',flex: 2, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', outline: 'none' }}
             />
             <select 
               value={priority} onChange={(e) => setPriority(e.target.value)}
-              style={{ flex: 1, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', backgroundColor: 'white' }}
+              style={{ flex: 1, padding: '13px', borderRadius: '15px', border: '1px solid #E2E8F0', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC' }}
             >
               <option value="High">High</option>
               <option value="Medium">Medium</option>
@@ -518,6 +554,7 @@ const inputStyle = {
         </form>
 
         {/* Task List */}
+        
         <div style={{ marginTop: '35px' }}>
           <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '1px' }}>
             Upcoming Tasks
@@ -528,7 +565,7 @@ const inputStyle = {
               return (
                 <div key={d.id} style={{ 
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                  padding: '16px', marginBottom: '12px', backgroundColor: '#F8FAFC', 
+                  padding: '16px', marginBottom: '12px', backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', 
                   borderRadius: '18px', border: '1px solid #F1F5F9'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -539,7 +576,7 @@ const inputStyle = {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ 
-                          fontSize: '15px', fontWeight: '600', color: d.completed ? '#94A3B8' : (isOverdue ? '#F43F5E' : '#1E293B'),
+                          fontSize: '15px', fontWeight: '600', color: d.completed ? '#94A3B8' : (isOverdue ? '#F43F5E' : (isDarkMode ? '#F8FAFC' : '#1E293B')),
                           textDecoration: d.completed ? 'line-through' : 'none'
                         }}>
                           {d.task} {isOverdue && "⚠️"}
@@ -600,6 +637,7 @@ const inputStyle = {
 
 </Routes> 
 </div>
+
 );
 }
 const hubLinkStyle = { 

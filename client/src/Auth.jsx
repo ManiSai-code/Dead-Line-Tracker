@@ -21,16 +21,10 @@ const Auth = ({ onLoginSuccess }) => {
       });
 
       if (response.ok) {
-        const userData = await response.json(); 
-        localStorage.setItem("userId", userData.id);
-        
-        // Change the alert to be dynamic
-        alert(isLogin ? "Welcome back!" : "Account created successfully!"); 
-        onLoginSuccess(); 
-      } else {
-        const errorMsg = await response.text();
-        alert(errorMsg); 
-      }
+    const userData = await response.json(); 
+    console.log(userData); // This will show you exactly what Java sent!
+    onLoginSuccess(userData); 
+}
     } catch (error) {
       console.error("Auth error:", error);
       alert("Backend is not running! Please start your Spring Boot server.");

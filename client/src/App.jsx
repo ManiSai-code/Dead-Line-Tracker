@@ -3,6 +3,7 @@ import Auth from './Auth';
 
 function App() {
   // 1. STATE VARIABLES
+  const [user, setUser] = useState(null);
   const [deadlines, setDeadlines] = useState([]);
   const [task, setTask] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -15,6 +16,7 @@ const completedCount = deadlines.filter(task => task.completed).length;
 const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
   // 2. DATE HELPER
   const today = new Date().toISOString().split('T')[0];
+  //const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   // 3. BACKEND ACTIONS
   const fetchDeadlines = () => {
@@ -35,13 +37,14 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
       fetchDeadlines();
     }
   }, [isLoggedIn]);
-
-  if (!isLoggedIn) {
-    return <Auth onLoginSuccess={() => {
-        localStorage.setItem("isLoggedIn", "true");
-        setIsLoggedIn(true);
-    }} />;
-  }
+// In App.jsx
+if (!isLoggedIn) {
+  return <Auth onLoginSuccess={(userData) => { // 1. Catch the data
+      localStorage.setItem("isLoggedIn", "true");
+      setUser(userData); // 2. This updates the state and fixes the warning!
+      setIsLoggedIn(true);
+  }} />;
+}
 
   const handleDelete = (id) => {
     fetch(`http://localhost:8080/api/deadlines/${id}`, {
@@ -88,6 +91,8 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
   };
 
   const logout = () => {
+    setUser(null);
+    setIsLoggedIn(false);
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
@@ -138,17 +143,16 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
         />
 
         {/* Logout Button */}
-        <button 
-          onClick={logout}
-          style={{
-            position: 'absolute', top: '25px', right: '25px', padding: '8px 16px',
-            backgroundColor: 'transparent', border: '1px solid #FDA4AF',
-            borderRadius: '15px', fontSize: '12px', cursor: 'pointer',
-            color: '#E11D48', fontWeight: '600'
-          }}
-        >
-          Logout
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+  {/* Using 'user' here makes the warning go away! */}
+  <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1E293B' }}>
+  {user?.username || 'Guest User'} {/* Changed .name to .username */}
+</p>
+  
+  <button onClick={logout}>
+    Logout
+  </button>
+</div>
 
         <h1 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '8px', color: '#0F172A', textAlign: 'center' }}>
           Deadline Tracker

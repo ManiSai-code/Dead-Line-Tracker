@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react'
 import Auth from './Auth';
+import { Routes, Route, Link ,useNavigate} from "react-router-dom";
 
 function App() {
   // 1. STATE VARIABLES
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => {
+  const savedUser = localStorage.getItem("userData");
+  return savedUser ? JSON.parse(savedUser) : null;
+});
   const [deadlines, setDeadlines] = useState([]);
   const [task, setTask] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [searchTerm, setSearchTerm] = useState(""); 
   const [status, setStatus] = useState("Connecting...");
-  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") === "true");
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+  return localStorage.getItem("isLoggedIn") === "true";
+});
   const totalTasks = deadlines.length;
 const completedCount = deadlines.filter(task => task.completed).length;
 const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
@@ -39,9 +46,14 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
   }, [isLoggedIn]);
 // In App.jsx
 if (!isLoggedIn) {
-  return <Auth onLoginSuccess={(userData) => { // 1. Catch the data
+  return <Auth onLoginSuccess={(userData) => {
+      // 1. Save to Storage (The "Memory")
       localStorage.setItem("isLoggedIn", "true");
-      setUser(userData); // 2. This updates the state and fixes the warning!
+      localStorage.setItem("userId", userData.id);
+      localStorage.setItem("userData", JSON.stringify(userData)); // Stringify the whole object
+
+      // 2. Save to State (The "UI")
+      setUser(userData);
       setIsLoggedIn(true);
   }} />;
 }
@@ -96,6 +108,8 @@ if (!isLoggedIn) {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
+    localStorage.clear();
+    navigate("/");
   };
 
   // 4. FILTER & SORT LOGIC
@@ -120,6 +134,76 @@ if (!isLoggedIn) {
   // 5. USER INTERFACE (JSX)
   return (
     <div style={{ 
+    fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', 
+    color: '#334155' 
+  }}>
+    <Routes>
+      <Route path="/profile" element={
+      <div style={{ 
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+        minHeight: '100vh', width: '100vw', backgroundColor: '#F8FAFC' 
+      }}>
+        <div style={{ 
+  padding: '40px', 
+  position: 'relative', // This is essential to keep the button inside the card
+  backgroundColor: 'white',
+  borderRadius: '24px',
+  maxWidth: '500px',
+  margin: '40px auto'
+}}>
+
+  {/* Top-Left Back Button */}
+  <button 
+    onClick={() => navigate("/")}
+    style={{ 
+      position: 'absolute',
+      top: '20px',
+      left: '20px',
+      background: 'none',
+      border: 'none',
+      color: '#64748B',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px',
+      transition: 'color 0.2s'
+    }}
+    onMouseOver={(e) => e.target.style.color = '#6366F1'}
+    onMouseOut={(e) => e.target.style.color = '#64748B'}
+  >
+    <span style={{ fontSize: '18px' }}>←</span> Dashboard
+  </button>
+          <h2 style={{ 
+  fontSize: '28px', 
+  fontWeight: '800', 
+  letterSpacing: '-0.5px', 
+  color: '#0F172A',
+  marginBottom: '10px' 
+}}>
+  Welcome {user?.username}
+</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <Link to="/edit-profile" style={hubLinkStyle}>📝 Edit Profile</Link>
+            <Link to="/settings" style={hubLinkStyle}>⚙️ Settings</Link>
+            <button onClick={logout} style={{ ...hubLinkStyle, color: '#F43F5E', border: 'none', background: 'none',cursor: 'pointer', textAlign: 'center' }}>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    } />
+    <Route path="/edit-profile" element={
+        <div style={{ padding: '50px', textAlign: 'center' }}>
+            <h2>Edit Profile Page</h2>
+            <p>Coming soon: Form to update {user?.username} in PostgreSQL</p>
+            <Link to="/profile">Go Back</Link>
+        </div>
+    } />
+      <Route path="/" element={
+    <div style={{ 
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
       minHeight: '100vh', width: '100vw', backgroundColor: '#F8FAFC', 
       fontFamily: '"Inter", "Segoe UI", sans-serif', color: '#1E293B'
@@ -142,16 +226,24 @@ if (!isLoggedIn) {
           }}
         />
 
-        {/* Logout Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-  {/* Using 'user' here makes the warning go away! */}
-  <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1E293B' }}>
-  {user?.username || 'Guest User'} {/* Changed .name to .username */}
-</p>
+       <div style={{ 
+    position: 'absolute', top: '25px', right: '25px', 
+    display: 'flex', alignItems: 'center', gap: '10px' 
+  }}>
+    <Link 
+      to="/profile" 
+      style={{ 
+        textDecoration: 'none', color: '#6366F1', fontWeight: 'bold', fontSize: '14px'
+      }}
+      onMouseOver={(e) => e.target.style.color = '  #8313eb'}
+  onMouseOut={(e) => e.target.style.color = '#6366F1'}
+    >
+      {user?.username}
+    
   
-  <button onClick={logout}>
-    Logout
-  </button>
+</Link>
+  
+  
 </div>
 
         <h1 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '8px', color: '#0F172A', textAlign: 'center' }}>
@@ -297,7 +389,26 @@ if (!isLoggedIn) {
         </div>
       </div>
     </div>
-  );
-}
+} /> 
 
+
+
+
+
+
+
+</Routes> 
+</div>
+);
+}
+const hubLinkStyle = { 
+  padding: '15px', 
+  textDecoration: 'none', 
+  color: '#1E293B', 
+  fontWeight: '600', 
+  backgroundColor: '#F1F5F9', 
+  borderRadius: '12px',
+  display: 'block',
+  textAlign: 'center'
+};
 export default App;

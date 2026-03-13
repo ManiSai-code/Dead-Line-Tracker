@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Auth from './Auth';
 import { Routes, Route, Link ,useNavigate} from "react-router-dom";
-
+//import './index.css'; 
+//import './App.css'; // If you have specific styles here too
 function App() {
   // 1. STATE VARIABLES
   const navigate = useNavigate();
@@ -15,6 +16,11 @@ function App() {
   const [priority, setPriority] = useState("Medium");
   const [searchTerm, setSearchTerm] = useState(""); 
   const [status, setStatus] = useState("Connecting...");
+  // App.jsx or EditProfile.js
+const [editName, setEditName] = useState(user?.username || "");
+const [editEmail, setEditEmail] = useState(user?.email || "");
+const [editPhone, setEditPhone] = useState(user?.phoneNumber || "");
+const [editGender, setEditGender] = useState(user?.gender || "");
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
   return localStorage.getItem("isLoggedIn") === "true";
 });
@@ -44,6 +50,15 @@ const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTa
       fetchDeadlines();
     }
   }, [isLoggedIn]);
+ useEffect(() => {
+  if (user) {
+    setEditName(user.username || "");
+    setEditEmail(user.email || "");
+    setEditPhone(user.phoneNumber || "");
+    setEditGender(user.gender || "");
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user?.id]);
 // In App.jsx
 if (!isLoggedIn) {
   return <Auth onLoginSuccess={(userData) => {
@@ -56,7 +71,58 @@ if (!isLoggedIn) {
       setUser(userData);
       setIsLoggedIn(true);
   }} />;
+
 }
+// This runs as soon as the component opens
+// ✅ CORRECT
+ // Only runs when 'user' changes // The [user] dependency means: "Run this whenever user data is available"
+const handleUpdateProfile = () => {
+  // Use the ID from the user state or fallback to localStorage if state is flickering
+  const currentId = user?.id || JSON.parse(localStorage.getItem("userData"))?.id;
+
+  if (!currentId) {
+    alert("User ID not found. Please try logging out and back in.");
+    return;
+  }
+
+  const updatedData = {
+    username: editName,
+    email: editEmail,
+    phoneNumber: editPhone,
+    gender: editGender
+  };
+
+  console.log("Sending update for ID:", currentId, updatedData);
+
+  fetch(`http://localhost:8080/api/auth/update/${currentId}`, {
+    method: "PUT",
+    headers: { 
+      "Content-Type": "application/json",
+      "Accept": "application/json" 
+    },
+    body: JSON.stringify(updatedData)
+  })
+  .then(res => {
+    console.log("Response status:", res.status);
+    if (!res.ok) {
+      return res.text().then(text => { throw new Error(text || "Server error") });
+    }
+    return res.json();
+  })
+  .then(data => {
+    // This updates the UI globally (including the name in the top-right corner)
+    setUser(data);
+    // This makes sure the data survives a page refresh
+    localStorage.setItem("userData", JSON.stringify(data));
+    
+    alert("Profile Updated Successfully!");
+    navigate("/profile");
+  })
+  .catch(err => {
+    console.error("Fetch error details:", err);
+    alert("Update failed: " + err.message);
+  });
+};
 
   const handleDelete = (id) => {
     fetch(`http://localhost:8080/api/deadlines/${id}`, {
@@ -129,7 +195,26 @@ if (!isLoggedIn) {
     const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
     return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
   });
-  
+  const labelStyle = { 
+  fontSize: '11px', 
+  fontWeight: '800', 
+  color: '#64748B', 
+  marginBottom: '5px', 
+  display: 'block',
+  letterSpacing: '0.5px'
+};
+
+const inputStyle = { 
+  width: '100%', 
+  padding: '12px 15px', 
+  borderRadius: '10px', 
+  border: '1px solid #E2E8F0', 
+  fontSize: '14px', 
+  outline: 'none', 
+  backgroundColor: '#F8FAFC',
+  boxSizing: 'border-box' // Essential for padding
+};
+
 
   // 5. USER INTERFACE (JSX)
   return (
@@ -196,12 +281,109 @@ if (!isLoggedIn) {
       </div>
     } />
     <Route path="/edit-profile" element={
-        <div style={{ padding: '50px', textAlign: 'center' }}>
-            <h2>Edit Profile Page</h2>
-            <p>Coming soon: Form to update {user?.username} in PostgreSQL</p>
-            <Link to="/profile">Go Back</Link>
+  <div style={{ 
+    minHeight: '100vh', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#F4F7FE',
+    position: 'relative' 
+  }}>
+    
+    {/* 1. Back Button in the top left */}
+    <button 
+      onClick={() => navigate("/profile")}
+      style={{ position: 'absolute', top: '20px', left: '20px', border: 'none', background: 'none', cursor: 'pointer', color: '#6366F1', fontWeight: 'bold' }}
+    >
+      ← Back to Hub
+    </button>
+
+    {/* 2. The Main Form Card */}
+    <div style={{ 
+      padding: '30px', 
+      backgroundColor: 'white', 
+      borderRadius: '20px', 
+      maxWidth: '400px', 
+      width: '90%', 
+      boxShadow: '0 10px 25px rgba(0,0,0,0.05)' 
+    }}>
+      <h2 style={{ marginBottom: '20px', color: '#1E293B', textAlign: 'center' }}>Edit Profile</h2>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        
+        {/* Username Field */}
+        <div>
+          <label style={labelStyle}>USERNAME</label>
+          <input 
+            type="text" 
+            value={editName} 
+            onChange={(e) => setEditName(e.target.value)} 
+            style={inputStyle} 
+          />
         </div>
-    } />
+
+        {/* Email Field */}
+        <div>
+          <label style={labelStyle}>EMAIL (FOR ALERTS)</label>
+          <input 
+            type="email" 
+            value={editEmail} 
+            onChange={(e) => setEditEmail(e.target.value)} 
+            placeholder="Enter email"
+            style={inputStyle} 
+          />
+        </div>
+
+        {/* Phone Field */}
+        <div>
+          <label style={labelStyle}>PHONE NUMBER</label>
+          <input 
+            type="text" 
+            value={editPhone} 
+            onChange={(e) => setEditPhone(e.target.value)} 
+            placeholder="Enter phone number"
+            style={inputStyle} 
+          />
+        </div>
+
+        {/* Gender Field */}
+        <div>
+          <label style={labelStyle}>GENDER</label>
+          <select 
+            value={editGender} 
+            onChange={(e) => setEditGender(e.target.value)} 
+            style={inputStyle}
+          >
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        {/* Save Button */}
+        <button 
+          onClick={handleUpdateProfile}
+          style={{
+            padding: '14px',
+            backgroundColor: '#6366F1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            marginTop: '10px',
+            transition: 'opacity 0.2s'
+          }}
+          onMouseOver={(e) => e.target.style.opacity = '0.9'}
+          onMouseOut={(e) => e.target.style.opacity = '1'}
+        >
+          Save All Changes
+        </button>
+      </div>
+    </div>
+  </div>
+} />
       <Route path="/" element={
     <div style={{ 
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 

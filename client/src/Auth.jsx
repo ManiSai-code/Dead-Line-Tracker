@@ -2,57 +2,51 @@ import React, { useState } from 'react';
 
 const Auth = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  
+  // 1. Updated state to include new fields
+  const [formData, setFormData] = useState({ 
+    username: '', 
+    password: '',
+    email: '',
+    phoneNumber: '',
+    gender: '' 
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Determine the correct backend endpoint
     const endpoint = isLogin ? '/login' : '/signup';
     
     try {
       const response = await fetch(`http://localhost:8080/api/auth${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        }),
+        // 2. This now sends ALL fields. Java will ignore extra ones during Login 
+        // but use all of them during Signup!
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-    const userData = await response.json(); 
-    console.log(userData); // This will show you exactly what Java sent!
-    onLoginSuccess(userData); 
-}
+        const userData = await response.json(); 
+        if (!isLogin) {
+          alert("Signup successful! Please login.");
+          setIsLogin(true); // Switch to login view after signup
+        } else {
+          onLoginSuccess(userData); 
+        }
+      } else {
+        const errorText = await response.text();
+        alert(errorText || "Authentication failed");
+      }
     } catch (error) {
       console.error("Auth error:", error);
-      alert("Backend is not running! Please start your Spring Boot server.");
+      alert("Backend is not running!");
     }
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh', 
-      width: '100vw', 
-      backgroundColor: '#f0f2f5',
-      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
-    }}>
-      
-      <div style={{ 
-        width: '100%', 
-        maxWidth: '450px', 
-        padding: '40px 20px', 
-        backgroundColor: 'white', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        textAlign: 'center'
-      }}>
-        
+    <div style={containerStyle}>
+      <div style={cardStyle}>
         <h1 style={{ color: '#1a1a1b', marginBottom: '10px', marginTop: '0px' }}>
           {isLogin ? 'Welcome Back' : 'Create Account'}
         </h1>
@@ -67,7 +61,7 @@ const Auth = ({ onLoginSuccess }) => {
             required 
             value={formData.username}
             onChange={(e) => setFormData({...formData, username: e.target.value})}
-            style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' }}
+            style={inputStyle}
           />
           <input 
             type="password" 
@@ -75,19 +69,43 @@ const Auth = ({ onLoginSuccess }) => {
             required 
             value={formData.password}
             onChange={(e) => setFormData({...formData, password: e.target.value})}
-            style={{ padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' }}
+            style={inputStyle}
           />
-          <button type="submit" style={{ 
-            padding: '12px', 
-            borderRadius: '6px', 
-            border: 'none', 
-            backgroundColor: '#007bff', 
-            color: 'white', 
-            fontSize: '16px', 
-            fontWeight: 'bold', 
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}>
+
+          {/* 3. Show extra fields only if NOT in login mode */}
+          {!isLogin && (
+            <>
+              <input 
+                type="email" 
+                placeholder="Email Address" 
+                required 
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                style={inputStyle}
+              />
+              <input 
+                type="text" 
+                placeholder="Phone Number" 
+                required 
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                style={inputStyle}
+              />
+              <select 
+                required
+                value={formData.gender}
+                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                style={inputStyle}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </>
+          )}
+
+          <button type="submit" style={buttonStyle}>
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
         </form>
@@ -105,5 +123,11 @@ const Auth = ({ onLoginSuccess }) => {
     </div>
   );
 };
+
+// Styles to keep the return clean
+const containerStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100vw', backgroundColor: '#f0f2f5' };
+const cardStyle = { width: '100%', maxWidth: '450px', padding: '40px 20px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', textAlign: 'center' };
+const inputStyle = { padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' };
+const buttonStyle = { padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#007bff', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' };
 
 export default Auth;

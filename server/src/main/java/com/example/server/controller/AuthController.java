@@ -9,10 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.OPTIONS})
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // Allow your React app access
+//@CrossOrigin(origins = "*") // Allow your React app access
 public class AuthController {
 
     @Autowired
@@ -40,4 +40,21 @@ public ResponseEntity<?> authenticateUser(@RequestBody User user) {
         return ResponseEntity.ok(dbUser.get());
     }
     return ResponseEntity.status(401).body("Invalid credentials");
-}}
+}
+@PutMapping("/update/{id}")
+public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    return userRepository.findById(id).map(user -> {
+        // Update fields
+        user.setUsername(userDetails.getUsername());
+        user.setEmail(userDetails.getEmail());
+        user.setPhoneNumber(userDetails.getPhoneNumber());
+        user.setGender(userDetails.getGender());
+        
+        // Save the updated user back to PostgreSQL
+        User updatedUser = userRepository.save(user);
+        
+        // Return the updated user so React can refresh the UI
+        return ResponseEntity.ok(updatedUser);
+    }).orElse(ResponseEntity.notFound().build());
+}
+}

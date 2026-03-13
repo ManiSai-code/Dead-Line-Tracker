@@ -101,3 +101,29 @@
   font-weight: bold;
   text-decoration: underline;
 }
+/* Apply to everything in the app */
+/* Apply to the entire app */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+body {
+  background-color: #f8f9fa; /* Soft off-white */
+  color: #1a1a1b;
+  line-height: 1.6;
+}
+
+/* Ensure inputs and buttons don't revert to sans-serif */
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: 16px;
+}
+
+/* Status Indicator style */
+.status-connected {
+  color: #28a745;
+  font-weight: bold;
+}

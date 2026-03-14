@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.server.model.Deadline;
 import com.example.server.repository.DeadlineRepository;
 import com.example.server.repository.UserRepository;
-import com.example.server.model.User;
+//import com.example.server.model.User;
 import java.util.List;
 
 @RestController

@@ -20,8 +20,7 @@ public class Deadline {
 @JoinColumn(name = "user_id")
 private User user;
     public Deadline() {}
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    
     
 
     // 2. The MISSING SETTER (Add this exactly as shown)

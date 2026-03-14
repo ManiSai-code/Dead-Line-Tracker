@@ -19,6 +19,7 @@ public class User {
 private String phoneNumber;
 private String gender;
 private boolean darkMode;
+private boolean emailNotificationsEnabled;
     // Default constructor (required by JPA)
     public User() {}
 
@@ -81,4 +82,13 @@ public User(String username, String password, String email, String phoneNumber, 
     }
     public boolean isDarkMode() { return darkMode; }
     public void setDarkMode(boolean darkMode) { this.darkMode = darkMode; }
+public boolean isEmailNotificationsEnabled() { 
+    return emailNotificationsEnabled; 
+}
+
+public void setEmailNotificationsEnabled(boolean emailNotificationsEnabled) { 
+    this.emailNotificationsEnabled = emailNotificationsEnabled; 
+}
+
+
 }

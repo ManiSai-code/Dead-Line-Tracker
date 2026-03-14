@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Add 'user' here inside the props destructuring
-const Settings = ({ isDarkMode, setIsDarkMode, user }) => {
+const Settings = ({ isDarkMode, setIsDarkMode, user,setUser }) => {
   const navigate = useNavigate();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    // 1. Check local storage first (survives the page refresh!)
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser && storedUser.emailNotificationsEnabled !== undefined) {
+      return storedUser.emailNotificationsEnabled;
+    }
+    // 2. Fallback to the user prop, then default to true
+    return user?.emailNotificationsEnabled ?? true;
+  });
   
 
   // Theme-based Colors
@@ -78,6 +86,32 @@ const handleThemeToggle = () => {
       });
     }
   };
+const handleNotificationToggle = async () => {
+    const newStatus = !notificationsEnabled;
+    setNotificationsEnabled(newStatus); // Instant UI feedback
+    
+    if (user?.id) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/auth/update-notifications/${user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newStatus)
+        });
+
+        if (response.ok) {
+          const updatedUser = await response.json(); // Get the fresh user from backend
+          
+          // THE MAGIC FIX: Update global state AND local storage simultaneously
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser)); 
+          // Note: In your App.js you use 'userData', so you might need to change 'user' to 'userData' here!
+          localStorage.setItem('userData', JSON.stringify(updatedUser)); 
+        }
+
+      } catch (error) {
+        console.error("Failed to save notification preference:", error);
+      }
+    }};
   return (
     <div style={pageWrapperStyle}>
       <div style={cardStyle}>
@@ -96,7 +130,10 @@ const handleThemeToggle = () => {
             <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>Email Notifications</p>
             <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>You will recieve notifications if this is turned on</p>
           </div>
-          <button onClick={() => setNotificationsEnabled(!notificationsEnabled)} style={getToggleStyle(notificationsEnabled)}>
+          <button 
+            onClick={handleNotificationToggle} 
+            style={getToggleStyle(notificationsEnabled)}
+          >
             <div style={getKnobStyle(notificationsEnabled)} />
           </button>
         </div>

@@ -308,9 +308,9 @@ const inputStyle = {
       </div>
     } />
     <Route 
-            path="/settings" 
-            element={<Settings isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />} 
-          />
+      path="/settings" 
+      element={<Settings isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} setUser={setUser} />} 
+    />
     <Route path="/edit-profile" element={
   <div style={{ 
     minHeight: '100vh', 

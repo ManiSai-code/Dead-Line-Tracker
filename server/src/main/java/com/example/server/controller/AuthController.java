@@ -71,4 +71,16 @@ public class AuthController {
                 return ResponseEntity.ok().body("{\"message\": \"Theme updated to " + (isDark ? "Dark" : "Light") + "\"}");
             }).orElse(ResponseEntity.notFound().build());
     }
+    // --- UPDATE NOTIFICATIONS (Specific for Email Alerts) ---
+   // --- UPDATE NOTIFICATIONS ---
+    @PutMapping("/update-notifications/{userId}")
+    public ResponseEntity<?> updateNotifications(@PathVariable Long userId, @RequestBody boolean isEnabled) {
+        return userRepository.findById(userId)
+            .map(user -> {
+                user.setEmailNotificationsEnabled(isEnabled);
+                // Save and return the full updated user object!
+                User updatedUser = userRepository.save(user);
+                return ResponseEntity.ok(updatedUser);
+            }).orElse(ResponseEntity.notFound().build());
+    }
 }

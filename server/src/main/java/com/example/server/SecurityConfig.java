@@ -1,5 +1,5 @@
 package com.example.server;
-
+import org.springframework.security.config.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 //import org.springframework.security.config.Customizer;
@@ -17,19 +17,17 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+   @Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.disable()) 
-        .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+        .csrf(csrf -> csrf.disable())  // Disables CSRF protection
+        .cors(cors -> cors.configure(http)) // Enables CORS protection
         .authorizeHttpRequests(auth -> auth
-            // Add the deadlines path to the permitAll list
-            .requestMatchers("/api/auth/**", "/api/deadlines/**").permitAll() 
-            .anyRequest().authenticated()
+            .anyRequest().permitAll() // Allows all requests without login (for testing)
         );
+    
     return http.build();
 }
-
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

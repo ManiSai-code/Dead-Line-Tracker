@@ -2,14 +2,15 @@ package com.example.server.scheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-
+import com.example.server.service.WhatsAppService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import com.example.server.model.User;
 import com.example.server.repository.DeadlineRepository;
-import com.example.server.repository.DeadlineRepository;
+//import com.example.server.repository.DeadlineRepository;
 import com.example.server.service.EmailService; // <--- This one!
 import com.example.server.model.Deadline;
 @Component
@@ -19,11 +20,12 @@ public class SmartEmailScheduler {
     private DeadlineRepository repository;
     @Autowired
     private EmailService emailService;
-
+    @Autowired
+    private WhatsAppService whatsAppService;
     // Run every hour to check for candidates
      
  // 60000ms = 1 minute for testing
-@Scheduled(fixedRate = 30000)
+@Scheduled(fixedRate = 60000)
 public void processSmartAlerts() {
     List<Deadline> deadlines = repository.findAllActive();
     LocalDateTime now = LocalDateTime.now();
@@ -46,25 +48,32 @@ public void processSmartAlerts() {
         LocalDateTime lastSent = task.getLastAlertSentAt();
 
         // Check if we should send
-        if (shouldSendAlert(hoursRemaining, lastSent, now)) {
-            emailService.sendDeadlineAlert(
-                task.getUser().getEmail(), 
-                task.getTask(), 
-                task.getDueDate(), 
-                task.getPriority()
-            );
+       if (shouldSendAlert(hoursRemaining, lastSent, now)) {
+    User user = task.getUser();
 
-            task.setLastAlertSentAt(now);
-            repository.save(task);
-            System.out.println("✅ EMAIL SENT for: " + task.getTask());
-        } 
-        else {
-            // --- ADD THIS ELSE BLOCK ---
-            long minsSince = (lastSent != null) ? java.time.Duration.between(lastSent, now).toMinutes() : 0;
-            System.out.println("❌ SKIP: Not time yet for [" + task.getTask() + 
-                               "] | Hours left: " + hoursRemaining + 
-                               " | Last sent: " + minsSince + " mins ago");
+    // 1. Use the correct getter name: isEmailNotificationsEnabled()
+    if (user.isEmailNotificationsEnabled()) { 
+        emailService.sendDeadlineAlert(
+            user.getEmail(), 
+            task.getTask(), 
+            task.getDueDate(), 
+            task.getPriority()
+        );
+        System.out.println("✅ EMAIL SENT for: " + task.getTask());
+    }
+
+    // 2. This matches your User.java getter: isWhatsappEnabled()
+    if (user.isWhatsappEnabled()) {
+        String phone = user.getPhoneNumber();
+        if (phone != null && !phone.isEmpty()) {
+            whatsAppService.sendWhatsAppAlert(phone, task.getTask(), task.getDueDate());
+            System.out.println("📱 WHATSAPP SENT for: " + task.getTask());
         }
+    }
+
+    task.setLastAlertSentAt(now);
+    repository.save(task);
+}
 
     } catch (Exception e) {
         System.err.println("Skipping task '" + task.getTask() + "' due to date error: " + e.getMessage());

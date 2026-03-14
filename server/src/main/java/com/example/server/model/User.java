@@ -20,6 +20,7 @@ private String phoneNumber;
 private String gender;
 private boolean darkMode;
 private boolean emailNotificationsEnabled;
+private boolean whatsappEnabled = true;
     // Default constructor (required by JPA)
     public User() {}
 
@@ -89,6 +90,8 @@ public boolean isEmailNotificationsEnabled() {
 public void setEmailNotificationsEnabled(boolean emailNotificationsEnabled) { 
     this.emailNotificationsEnabled = emailNotificationsEnabled; 
 }
+public boolean isWhatsappEnabled() { return whatsappEnabled; }
+public void setWhatsappEnabled(boolean whatsappEnabled) { this.whatsappEnabled = whatsappEnabled; }
 
 
 }

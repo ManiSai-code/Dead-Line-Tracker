@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import NotificationSettings from './NotificationSettings';
+import axios from 'axios';
 // Add 'user' here inside the props destructuring
 const Settings = ({ isDarkMode, setIsDarkMode, user,setUser }) => {
   const navigate = useNavigate();
@@ -13,6 +14,36 @@ const Settings = ({ isDarkMode, setIsDarkMode, user,setUser }) => {
     // 2. Fallback to the user prop, then default to true
     return user?.emailNotificationsEnabled ?? true;
   });
+  const [whatsappOn, setWhatsappOn] = useState(false); // Add this state
+useEffect(() => {
+    const fetchUserSettings = async () => {
+        try {
+            // Make sure the URL matches your GET endpoint for the user
+            const response = await axios.get(`http://localhost:8080/api/users/${user.id}`);
+            
+            // Set the toggle to match the database value
+            setWhatsappOn(response.data.whatsappEnabled);
+        } catch (error) {
+            console.error("Error fetching user settings:", error);
+        }
+    };
+
+    if (user && user.id) {
+        fetchUserSettings();
+    }
+}, [user.id]);
+const toggleWhatsApp = async () => {
+    try {
+        const newValue = !whatsappOn;
+        // Use user.id since it's passed as a prop!
+        await axios.put(`http://localhost:8080/api/users/${user.id}/notifications/whatsapp`, {
+            enabled: newValue
+        });
+        setWhatsappOn(newValue);
+    } catch (error) {
+        console.error("Error updating preferences", error);
+    }
+};
   
 
   // Theme-based Colors
@@ -125,32 +156,47 @@ const handleNotificationToggle = async () => {
         <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '10px', color: theme.text }}>Settings</h2>
         
         {/* Row 1: Notifications */}
-        <div style={rowStyle}>
-          <div>
-            <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>Email Notifications</p>
-            <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>You will recieve notifications if this is turned on</p>
-          </div>
-          <button 
-            onClick={handleNotificationToggle} 
-            style={getToggleStyle(notificationsEnabled)}
-          >
-            <div style={getKnobStyle(notificationsEnabled)} />
-          </button>
-        </div>
+        {/* Row 1: Notifications */}
+<div style={rowStyle}>
+  <div>
+    <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>Email Notifications</p>
+    <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>You will receive notifications if this is turned on</p>
+  </div>
+  <button 
+    onClick={handleNotificationToggle} 
+    style={getToggleStyle(notificationsEnabled)}
+  >
+    <div style={getKnobStyle(notificationsEnabled)} />
+  </button>
+</div>
 
-        {/* Row 2: Theme Toggle */}
-        <div style={{ ...rowStyle, borderBottom: 'none' }}>
-          <div>
-            <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>Dark Mode</p>
-            <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>Switch between light and dark themes</p>
-          </div>
-          <button 
-      onClick={handleThemeToggle} // 3. CONNECT THE BRAIN HERE
-      style={getToggleStyle(isDarkMode)}
-    >
-      <div style={getKnobStyle(isDarkMode)} />
-    </button>
-        </div>
+{/* Row 2: WhatsApp Notifications (FIXED ALIGNMENT) */}
+<div style={rowStyle}>
+  <div>
+    <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>WhatsApp Notifications</p>
+    <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>You will receive whatsapp messages if this is turned on</p>
+  </div>
+  <button 
+    onClick={toggleWhatsApp} 
+    style={getToggleStyle(whatsappOn)}
+  >
+    <div style={getKnobStyle(whatsappOn)} />
+  </button>
+</div>
+
+{/* Row 3: Theme Toggle */}
+<div style={{ ...rowStyle, borderBottom: 'none' }}>
+  <div>
+    <p style={{ margin: 0, fontWeight: '600', color: theme.text }}>Dark Mode</p>
+    <p style={{ margin: 0, fontSize: '12px', color: theme.subText }}>Switch between light and dark themes</p>
+  </div>
+  <button 
+    onClick={handleThemeToggle} 
+    style={getToggleStyle(isDarkMode)}
+  >
+    <div style={getKnobStyle(isDarkMode)} />
+  </button>
+</div>
       </div>
     </div>
   );

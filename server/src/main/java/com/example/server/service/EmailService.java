@@ -19,7 +19,7 @@ public class EmailService {
     
     // Better Subject Line
     message.setSubject("🚨 Action Required: Your Deadline for '" + taskName + "' is Tomorrow!");
-    
+    String safePriority = (priority != null) ? priority : "NORMAL";
     // Richer Email Content
     String emailBody = "Dear User,\n\n" +
             "This is a friendly reminder from your Dead-Line-Tracker. " +
@@ -29,7 +29,7 @@ public class EmailService {
             "--------------------------------------------------\n" +
             "Task Name:   " + taskName + "\n" +
             "Due Date:    " + dueDate + " (Tomorrow)\n" +
-            "Priority:    " + priority.toUpperCase() + "\n" +
+            "Priority:    " + safePriority.toUpperCase() + "\n" +
             "Status:      PENDING\n" +
             "--------------------------------------------------\n\n" +
             "To manage your tasks or mark this as complete, please visit the dashboard:\n" +

@@ -1,5 +1,7 @@
 package com.example.server.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +18,7 @@ public class Deadline {
     private String dueDate;
     private String priority; // 1. Added the new field
     private boolean completed;
+    private LocalDateTime lastAlertSentAt;
     @ManyToOne
 @JoinColumn(name = "user_id")
 private User user;
@@ -47,4 +50,6 @@ private User user;
     public void setPriority(String priority) { this.priority = priority; }
     public boolean isCompleted() { return completed; }
 public void setCompleted(boolean completed) { this.completed = completed; }
+public LocalDateTime getLastAlertSentAt() { return lastAlertSentAt; }
+public void setLastAlertSentAt(LocalDateTime lastAlertSentAt) { this.lastAlertSentAt = lastAlertSentAt; }
 }

@@ -153,3 +153,4 @@ server/.classpath
 .vscode/
 *.sql
 *.db
+server/src/main/resources/application.properties

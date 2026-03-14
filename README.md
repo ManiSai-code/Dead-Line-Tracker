@@ -24,6 +24,19 @@ git push origin main
 
 
 
+🛠️ Setup Instructions
+Clone the repository.
+
+Navigate to the server directory.
+
+Create a .env file by copying the template:
+
+cp .env.example .env (or manually create it).
+
+Update the values in .env with your local PostgreSQL and Gmail credentials.
+
+Run the app: ./mvnw spring-boot:run.
+
 
 
 
